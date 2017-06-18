@@ -19,13 +19,14 @@ np.set_printoptions(threshold=np.nan)
 # np.random.seed(1)
 
 # Tinklo nustatymai
-example_count = 200		# Treniruotei skirtų pavyzdžių skaičius
-input_count = 50		# Testavimui skirtų įvesčių skaičius
-mini_batch_size = 15	# Pavyzdžių poaibio dydis mini-batch gradientui
-epochs = 2000			# Treniruočių (iteracijų) skaičius
-bit_count = 8			# Pavyzdinio masyvo dydis (bitų skaičius)
-learning_rate = 1		# Mokymosi greitis (miu)1
-
+example_count = 200			# Treniruotei skirtų pavyzdžių skaičius
+input_count = 50			# Testavimui skirtų įvesčių skaičius
+mini_batch_size = 1		# Pavyzdžių poaibio dydis mini-batch gradientui
+epochs = 5000				# Treniruočių (iteracijų) skaičius
+bit_count = 8				# Pavyzdinio masyvo dydis (bitų skaičius)
+learning_rate = 1			# Mokymosi greitis (miu)
+hidden_layer_1_size = 25
+hidden_layer_2_size = 15
 #Sigmoid funkcija
 def sigmoid(x, derivative=False):	
 	if(derivative==True):
@@ -63,9 +64,9 @@ for i in range(examples.shape[0]):
 	output[i][counter] = 1
 
 #Sinapsės inicializuojamos su atsitiktiniais svoriais
-synapse_1 = 2*np.random.random((bit_count, mini_batch_size)) - 1
-synapse_2 = 2*np.random.random((mini_batch_size, mini_batch_size)) - 1
-synapse_3 = 2*np.random.random((mini_batch_size, bit_count+1)) - 1
+synapse_1 = 2*np.random.random((bit_count, hidden_layer_1_size)) - 1
+synapse_2 = 2*np.random.random((hidden_layer_1_size, hidden_layer_2_size)) - 1
+synapse_3 = 2*np.random.random((hidden_layer_2_size, bit_count+1)) - 1
 
 #Pavyzdžių poaibių sudarymas
 def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
@@ -82,6 +83,7 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
 	
 #Tinklo treniravimas
 for x in range(epochs):
+	print(x)
 	for batch in iterate_minibatches(examples, output, mini_batch_size, False):
 		
 		batch_input, batch_output = batch
@@ -112,6 +114,8 @@ for x in range(epochs):
 		synapse_2 -= learning_rate * layer_1.T.dot(layer_2_delta)
 		synapse_1 -= learning_rate * layer_0.T.dot(layer_1_delta)
 			
+			
+	
 #Tinklo testavimas
 print("Spėjimas / Tikroji reikšmė")
 correct_guesses = 0		#Teisingų spėjimų skaičius
@@ -146,6 +150,7 @@ for i in range(input.shape[0]):
 			index2 = 1
 		ind_taiklumas.append(index1/index2)
 		
+print(np.mean(np.abs(layer_3_error)))
 print("Teisingi spėjimai: ", correct_guesses, " iš ", input.shape[0], "(", correct_guesses/input.shape[0], ")")
 
 sum = 0
