@@ -21,31 +21,32 @@ np.set_printoptions(threshold=np.nan)
 # Tinklo nustatymai
 example_count = 200			# Treniruotei skirtų pavyzdžių skaičius
 input_count = 50			# Testavimui skirtų įvesčių skaičius
-mini_batch_size = 1		# Pavyzdžių poaibio dydis mini-batch gradientui
-epochs = 5000				# Treniruočių (iteracijų) skaičius
+mini_batch_size = 1			# Pavyzdžių poaibio dydis Mini-Batch gradientui
+epochs = 5000				# Iteracijų skaičius mokymui
 bit_count = 8				# Pavyzdinio masyvo dydis (bitų skaičius)
-learning_rate = 1			# Mokymosi greitis (miu)
-hidden_layer_1_size = 25
-hidden_layer_2_size = 15
-#Sigmoid funkcija
+learning_rate = 1			# Mokymosi greitis
+hidden_layer_1_size = 25	# Pirmojo paslėptojo sluoksnio dydis
+hidden_layer_2_size = 15	# Antrojo paslėptojo sluoksnio dydis
+
+# Sigmoid funkcija
 def sigmoid(x, derivative=False):	
 	if(derivative==True):
 		return x*(1-x)
 	return 1/(1+np.exp(-x))
 
-#Treniruotės masyvas (atsitiktinis)
+# Treniruotės masyvas (atsitiktinis)
 examples = np.zeros((example_count, bit_count), dtype=np.int)	
 for i in range(examples.shape[0]):
 	for j in range(examples.shape[1]):
 		examples[i][j] = np.random.randint(0, 2)
 		
-#Įvesties masyvas (atsitiktinis)						
+# Įvesties masyvas (atsitiktinis)						
 input = np.zeros((input_count, bit_count))
 for i in range(input.shape[0]):
 	for j in range(input.shape[1]):
 		input[i][j] = np.random.randint(0, 2)
 
-#Tikrasis įvestyse esančių bitų skaičius (rezultato palyginimui)
+# Tikrasis įvestyse esančių bitų skaičius (rezultato palyginimui)
 input_value = np.zeros(input.shape[0])
 for i in range(input.shape[0]):
 	counter = 0
@@ -54,7 +55,7 @@ for i in range(input.shape[0]):
 			counter = counter + 1
 	input_value[i] = counter
 
-#Tikroji pavyzdžių reikšmė (pageidaujama išvestis - taikiniai)
+# Tikroji pavyzdžių reikšmė (pageidaujama išvestis - taikiniai)
 output = np.zeros((examples.shape[0], examples.shape[1]+1), dtype=np.int)
 for i in range(examples.shape[0]):
 	counter = 0
@@ -63,12 +64,12 @@ for i in range(examples.shape[0]):
 			counter = counter + 1
 	output[i][counter] = 1
 
-#Sinapsės inicializuojamos su atsitiktiniais svoriais
+# Sinapsės inicializuojamos su atsitiktiniais svoriais
 synapse_1 = 2*np.random.random((bit_count, hidden_layer_1_size)) - 1
 synapse_2 = 2*np.random.random((hidden_layer_1_size, hidden_layer_2_size)) - 1
 synapse_3 = 2*np.random.random((hidden_layer_2_size, bit_count+1)) - 1
 
-#Pavyzdžių poaibių sudarymas
+# Pavyzdžių poaibių sudarymas
 def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
     assert inputs.shape[0] == targets.shape[0]
     if shuffle:
@@ -81,20 +82,24 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
             excerpt = slice(start_idx, start_idx + batchsize)
         yield inputs[excerpt], targets[excerpt]
 	
-#Tinklo treniravimas
+# Tinklo treniravimas
 for x in range(epochs):
 	print(x)
 	for batch in iterate_minibatches(examples, output, mini_batch_size, False):
 		
+		# Paimamas pavyzdžių ir atitinkamų taikinių poaibis
 		batch_input, batch_output = batch
 		
 		layer_0 = batch_input
 		output_ref = batch_output
 				
+		# Pavyzdžių matrica sudauginama su sinapsės matrica ir gaunama
+		# sigmoid funkcijos reikšmė kiekvienam elementui
 		layer_1 = sigmoid(np.dot(layer_0, synapse_1))
 		layer_2 = sigmoid(np.dot(layer_1, synapse_2))
 		layer_3 = sigmoid(np.dot(layer_2, synapse_3))
-				
+		
+		# Gaunamos paklaidos ir gradientas kiekvienam sluoksniui
 		layer_3_error = layer_3 - output_ref
 		layer_3_delta = layer_3_error*sigmoid(layer_3, True)
 				
@@ -104,22 +109,24 @@ for x in range(epochs):
 		layer_1_error = layer_2_delta.dot(synapse_2.T)
 		layer_1_delta = layer_1_error*sigmoid(layer_1, True)
 		
+		# Konvertavimas į Numpy matricas (skaičiavimo paprastumui)
 		layer_1 = np.matrix(layer_1)
 		layer_2_delta = np.matrix(layer_2_delta)
 		layer_2 = np.matrix(layer_2)
 		layer_3 = np.matrix(layer_3)
 		layer_3_delta = np.matrix(layer_3_delta)
 				
+		# Pagal suskaičiuotus gradientus keičiami svoriai
 		synapse_3 -= learning_rate * layer_2.T.dot(layer_3_delta)
 		synapse_2 -= learning_rate * layer_1.T.dot(layer_2_delta)
 		synapse_1 -= learning_rate * layer_0.T.dot(layer_1_delta)
 			
 			
 	
-#Tinklo testavimas
+# Tinklo testavimas
 print("Spėjimas / Tikroji reikšmė")
-correct_guesses = 0		#Teisingų spėjimų skaičius
-ind_taiklumas = []		#Kiekvienos įvesties bitų skaičiaus spėjimo tikslumas
+correct_guesses = 0		# Teisingų spėjimų skaičius
+ind_taiklumas = []		# Kiekvienos įvesties bitų skaičiaus spėjimo tikslumas
 for i in range(input.shape[0]):
 	layer_0 = input[i]
 	
