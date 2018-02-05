@@ -10,5 +10,10 @@ Programoms reikalingi Python paketai:
 1) Numpy
 2) BioPython
 3) Matplotlib
+4) Theano (tik su grafiniu procesoriumi (GPU) optimizuotiems neuronų tinklams.)
 
 Programoms argumentų nereikia (įsitikinkite, kad failų išdėstymas ir jų vardai tokie patys, kaip repozitorijoje).
+
+Su GPU optimizuoti neuronų tinklai - NN_proteins.py ir NN_miRNA.py
+
+Optimizuotiems tinklams reikalingas grafinis procesorius, palaikantis CUDA (versija 8.0) ir cuDNN (versija 5.1)
